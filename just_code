@@ -1,0 +1,51 @@
+from random import uniform  # Используем uniform вместо randint для лучшей инициализации
+
+n_samples = 5  # target: k = -0.41, b = 0.81
+x_values = [0.12, 1.4, 1.9, 3.5, 4.44]  # inputs
+y_values = [0.7708, -0.004, 0.051, -0.245, -1.0704]  # targets
+lr = 0.1
+# Инициализация маленькими значениями near 0
+b, k = uniform(-0.1, 0.1), uniform(-0.1, 0.1)  # bias, w
+
+def f(x):
+    return k * x + b
+
+def mse():
+    total_error = 0
+    for i in range(n_samples):
+        error = y_values[i] - f(x_values[i])
+        total_error += error ** 2
+    return total_error / n_samples
+
+# Сохраняем историю ошибок для анализа
+errors_history = []
+
+for epoch in range(100):
+    total_error = 0
+    
+    for i in range(n_samples):
+        target = y_values[i]
+        output = f(x_values[i])
+        error = output - target  # ← ОШИБКА БЫЛА ЗДЕСЬ: должно быть output - target
+        
+        # Правильные формулы градиента:
+        b -= lr * (2 / n_samples) * error  # производная по b
+        k -= lr * (2 / n_samples) * error * x_values[i]  # производная по k
+        
+        total_error += (error) ** 2
+    
+    current_mse = total_error / n_samples
+    errors_history.append(current_mse)
+    
+    if epoch % 10 == 0:  # Выводим не каждый эпох
+        print(f"epoch: {epoch}, error: {current_mse:.6f}, k: {k:.4f}, b: {b:.4f}")
+
+print(f"\nFinal: k = {k:.6f}, b = {b:.6f}")
+print(f"Target: k ≈ -0.41, b ≈ 0.81")
+
+# Проверка предсказаний
+print("\nPredictions vs Targets:")
+for i in range(n_samples):
+    pred = f(x_values[i])
+    actual = y_values[i]
+    print(f"x: {x_values[i]:.2f}, pred: {pred:.4f}, target: {actual:.4f}, error: {abs(pred-actual):.4f}")
