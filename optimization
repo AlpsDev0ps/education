@@ -1,0 +1,54 @@
+from random import random, uniform  # Исправленный импорт
+
+inputs = [[0.12], [1.4], [1.9], [3.5], [4.44]]  # inputs
+targets = [0.7708, -0.004, 0.051, -0.245, -1.0704]  # targets
+
+def mse(outputs, targets):
+    error = 0
+    for i, output in enumerate(outputs):
+        error += (output - targets[i]) ** 2
+    return error / len(outputs)
+
+class LinearRegression:
+    def __init__(self, features_num):
+        # Инициализация маленькими случайными значениями
+        self.weights = [uniform(-0.1, 0.1) for _ in range(features_num + 1)]
+    
+    def forward(self, input_features):
+        output = 0
+        for i, feature in enumerate(input_features):
+            output += self.weights[i] * feature
+        output += self.weights[-1]  # bias
+        return output
+    
+    def train(self, inp, output, target, samples_num, lr):
+        # Правильная формула градиента
+        error = output - target
+        for j in range(len(self.weights) - 1):
+            self.weights[j] -= lr * (2 / samples_num) * error * inp[j]
+        self.weights[-1] -= lr * (2 / samples_num) * error
+    
+    def fit(self, inputs, targets, epochs=100, lr=0.01):  # Уменьшен learning rate
+        for epoch in range(epochs):
+            total_error = 0
+            outputs = []
+            
+            for i, inp in enumerate(inputs):
+                output = self.forward(inp)
+                outputs.append(output)
+                self.train(inp, output, targets[i], len(inputs), lr)
+                total_error += (output - targets[i]) ** 2
+            
+            if epoch % 10 == 0:  # Выводим ошибку не каждый эпох
+                print(f"epoch: {epoch}, error: {total_error/len(inputs):.6f}")
+
+# Запуск модели
+lr_model = LinearRegression(features_num=1)
+lr_model.fit(inputs, targets, epochs=100, lr=0.01)
+print("Final weights:", lr_model.weights)
+
+# Тестирование
+print("\nPredictions vs Targets:")
+for i, inp in enumerate(inputs):
+    pred = lr_model.forward(inp)
+    print(f"Input: {inp[0]:.2f}, Pred: {pred:.4f}, Target: {targets[i]:.4f}")
